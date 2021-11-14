@@ -1,0 +1,181 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <script src="../Scripts/jquery-3.4.1.js"></script>
+    <script>
+        $(document).ready(function () {
+            showVacciendPatients();
+        })
+
+        function showVacciendPatients()
+        {
+            $.ajax({
+                dataType: "json",
+                url: "/api/Patient/showVacciened",
+                contentType: "application/json",
+                type: "GET",
+                success: function (data) {
+                    for (var i = 0; i < data.length; i++) {
+                        var res_class = (data[i].Sensitive == true) ? 'rowYellow' : '';
+                        $("#VaccinedPatients").append(
+                            "<tr class='" + res_class + "'>" +
+                            `<td>${data[i].Name}</td>
+									<td>${data[i].ID}</td>
+									<td>${data[i].Sensitive}</td>
+									<td>${data[i].VaccinType }</td>
+									<td>${data[i].DoseNo }</td>
+								</tr>`
+                        );
+                    }
+                },
+                error: function (err) {
+                    console.log(err);
+                }
+            })
+
+        }
+
+        function search()
+        {
+            var str = $("#searchKey").val();
+            
+            $.ajax({
+                dataType: "json",
+                url: `/api/Patient/${str}`,
+                contentType: "application/json",
+                type: "GET",
+                success: function (data) {
+
+                    $(`#VaccinedPatients tr:not(:first)`).remove();
+                    for (var i = 0; i < data.length; i++) {
+                        var res_class = (data[i].Sensitive == true) ? 'rowYellow' : '';
+                        $("#VaccinedPatients").append(
+                            "<tr class='" + res_class + "'>" +
+                            `<td>${data[i].Name}</td>
+									<td>${data[i].ID}</td>
+									<td>${data[i].Sensitive}</td>
+									<td>${data[i].VaccinType}</td>
+									<td>${data[i].DoseNo}</td>
+								</tr>`
+                        )
+                    }
+                },
+                error: function (err) {
+                    //פונקציה שתופעל במקרה של שגיאה
+                    console.log(err);
+                }
+            })
+        }
+
+        function NewPatient()
+        {
+            var ID = $("#ID").val();
+            var VaccinID = $("#VaccineID").val();
+            var DoseNo = $("#DoseNo").val();
+            var Sensitive = $("#Sensitive").val();
+
+            var o = { ID: ID, VaccinID: VaccinID, DoseNo: DoseNo, Sensitive: Sensitive };
+
+            $.ajax({
+                dataType: "json",
+                url: `/api/Patient/AddPatient`,
+                contentType: "application/json",
+                type: "POST",
+                data: JSON.stringify(o),
+                success: function (data) {
+                    $(`#VaccinedPatients tr:not(:first)`).remove();
+                    showVacciendPatients();
+                    $("#returnMsg").html("לקוח התווסף לרשימת החיסונים");
+                },
+                error: function (err) {
+                    console.log(err);
+                    $("#returnMsg").html(err.responseText);
+                }
+            }
+
+            );
+        }
+
+        function update()
+        {
+            var Name = $("#patientName").val();
+            var ID = $("#patientID").val();
+
+            var o = { Name: Name, ID: ID }
+
+            $.ajax({
+                dataType: "json",
+                url: "/api/Patient/update",   /// BY URL
+                contentType: "application/json",
+                type: "PUT",
+                data: JSON.stringify(o),           ///BY BODY [FrameBody]
+                success: function (data) {
+                    $(`#VaccinedPatients tr:not(:first)`).remove();
+                    showVacciendPatients();
+                    $("#returnMsg").html("שם הלקוח שונה בהצלחה");
+                },
+                error: function (err) {
+                    console.log(err);
+                    $("#returnMsg").html(err.responseText);
+                }
+            })
+
+
+        }
+
+    </script>
+    <style>
+        th {
+            background-color: lightblue;
+            font-family: Arial;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 5px;
+        }
+
+        table {
+            width: 50%;
+            border-collapse: collapse;
+        }
+
+        .rowYellow {
+            background-color: yellow;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body dir="rtl">
+    <input type="text" id="searchKey" placeholder="חיפוש לקוח" />
+    <input type="button" value="חפש" onclick="search()" />
+    <br /><br />
+    <table id="VaccinedPatients">
+        <tr>
+            <th>תז הלקוח</th>
+            <th>שם הלקוח</th>
+            <th>רגישות</th>
+            <th>סוג חיסון</th>
+            <th>חיסון מספר</th>
+        </tr>
+    </table>
+    <br />
+    <input type="text" id="ID" placeholder="תז לקוח" />
+    <input type="text" id="Sensitive" placeholder="רגישות-כן\לא" />
+    <input type="text" id="VaccineID" placeholder="סוג החיסון" />
+    <input type="number" id="DoseNo" placeholder="מספר החיסון" />
+    <input type="button" value="הוסף לקוח חדש" onclick="NewPatient()" />
+    <div id="returnMsg" class="error"</div>
+    <br />
+    <input type="text" id="patientID" placeholder="תז לקוח"/>
+    <input type="text" id="patientName" placeholder="שינוי שם ללקוח" />
+    <input type="button" value="עדכן לקוח" onclick="update()" />
+
+</body>
+</html>
